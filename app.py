@@ -5,7 +5,6 @@ import mysql.connector
 from mysql.connector import Error
 import random
 from datetime import datetime
-import pymysql
 
 def conectar_banco():
     """Função para conectar ao banco de dados MySQL."""
@@ -113,8 +112,8 @@ def criar_janela():
             try:
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO om_manutencao (numero_ordem, tipo, descricao, data_previsao, data_conclusao, responsavel, status, equipamento, custo)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO om_manutencao (numero_ordem, tipo, descricao, data_previsao, data_conclusao, responsavel, status, equipamento, custo, ativo)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     numero_ordem,
                     tipo_combobox.get(),
@@ -124,7 +123,8 @@ def criar_janela():
                     responsavel_entry.get(),
                     status_combobox.get(),
                     equipamento_entry.get(),
-                    custo_entry.get()
+                    custo_entry.get(),
+                    True  # Define o registro como ativo
                 ))
                 conn.commit()
                 messagebox.showinfo("Sucesso", "Dados inseridos com sucesso!")
@@ -276,9 +276,9 @@ def criar_janela():
             if conn:
                 try:
                     cursor = conn.cursor()
-                    cursor.execute("DELETE FROM om_manutencao WHERE id=%s", (item_id,))
+                    cursor.execute("UPDATE om_manutencao SET ativo = FALSE WHERE id = %s", (item_id,))
                     conn.commit()
-                    messagebox.showinfo("Sucesso", "Ordem excluída com sucesso!")
+                    messagebox.showinfo("Sucesso", "Ordem marcada como excluída com sucesso!")
                     exibir_dados()  # Atualiza a exibição dos dados
                 except Error as ex:
                     messagebox.showerror("Erro ao excluir ordem", f"Erro ao excluir ordem: {ex}")
@@ -332,7 +332,7 @@ def criar_janela():
         if conn:
             try:
                 cursor = conn.cursor()
-                cursor.execute("SELECT id, numero_ordem, tipo, descricao, data_previsao, data_conclusao, responsavel, status, equipamento, custo FROM om_manutencao")
+                cursor.execute("SELECT id, numero_ordem, tipo, descricao, data_previsao, data_conclusao, responsavel, status, equipamento, custo FROM om_manutencao WHERE ativo = TRUE")
                 rows = cursor.fetchall()
                 for row in tree.get_children():
                     tree.delete(row)
